@@ -101,7 +101,7 @@ The system follows a producer–consumer model:
 ### Clone Repository
 
 ```bash
-git clone <private-repo-url>
+git clone https://github.com/aakarsh5/Outbox-Labs.git
 cd Backend
 ```
 
