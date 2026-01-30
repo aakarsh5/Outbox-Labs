@@ -1,11 +1,13 @@
 import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import emailRoutes from "./routes/email.routes.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/emails", emailRoutes);
 
 // API rate limiting
 app.use(
