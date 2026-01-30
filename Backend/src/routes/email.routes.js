@@ -1,14 +1,21 @@
 import express from "express";
 import { emailQueue } from "../queues/emailQueue.js";
-import { createEmail } from "../services/email.service.js";
+import { createEmail, getAllEmails } from "../services/email.service.js";
 
 const router = express.Router();
 
-// Schedule an email
+// schedule an email
+
 router.post("/schedule", async (req, res) => {
   try {
     const { to, subject, body, scheduledAt } = req.body;
-    // validate format
+
+    // basic validation
+    if (!to || !subject || !body || !scheduledAt) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // validate date format
     const parsedDate = new Date(scheduledAt);
     if (isNaN(parsedDate.getTime())) {
       return res.status(400).json({
@@ -16,22 +23,23 @@ router.post("/schedule", async (req, res) => {
       });
     }
 
-    if (!to || !subject || !body || !scheduledAt) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    // Calculate delay FIRST
-    const delay = new Date(scheduledAt).getTime() - Date.now();
+    // validate future time
+    const delay = parsedDate.getTime() - Date.now();
     if (delay < 0) {
       return res
         .status(400)
         .json({ message: "Scheduled time must be in the future" });
     }
 
-    // 1️⃣ Save email in DB
-    const email = await createEmail({ to, subject, body, scheduledAt });
+    // save email in DB
+    const email = await createEmail({
+      to,
+      subject,
+      body,
+      scheduledAt: parsedDate,
+    });
 
-    // 2️⃣ Add job to queue (SINGLE add, idempotent)
+    // add job to queue
     await emailQueue.add(
       "send-email",
       {
@@ -42,8 +50,8 @@ router.post("/schedule", async (req, res) => {
       },
       {
         delay,
-        jobId: email.id, // idempotency
-        attempts: 3, // retries
+        jobId: email.id,
+        attempts: 3,
         backoff: {
           type: "exponential",
           delay: 2000,
@@ -58,6 +66,18 @@ router.post("/schedule", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// get all emails
+
+router.get("/", async (req, res) => {
+  try {
+    const emails = await getAllEmails();
+    res.json(emails);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch emails" });
   }
 });
 
