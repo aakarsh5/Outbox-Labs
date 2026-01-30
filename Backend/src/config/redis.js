@@ -1,12 +1,17 @@
 import IORedis from "ioredis";
 import { env } from "./env.js";
 
-export const redisConnection = new IORedis({
-  host: env.redisHost,
-  port: Number(env.redisPort),
-  password: env.redisPassword,
-  tls: {},
+// export const redisConnection = new IORedis({
+//   host: env.redisHost,
+//   port: Number(env.redisPort),
+//   password: env.redisPassword,
+//   tls: {},
+//   maxRetriesPerRequest: null,
+// });
+
+export const redisConnection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
+  enableReadyCheck: false,
 });
 
 redisConnection.on("connect", () => {
@@ -14,7 +19,7 @@ redisConnection.on("connect", () => {
 });
 
 redisConnection.on("ready", () => {
-  console.log("Redis Authenticated and Ready");
+  console.log("Redis Ready");
 });
 
 redisConnection.on("error", (err) => {
