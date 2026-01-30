@@ -73,7 +73,10 @@ router.post("/schedule", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const emails = await getAllEmails();
+    const { status } = req.query;
+
+    const emails = await getAllEmails(status ? { status } : {});
+
     res.json(emails);
   } catch (err) {
     console.error(err);

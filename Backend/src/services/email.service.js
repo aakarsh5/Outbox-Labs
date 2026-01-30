@@ -25,8 +25,9 @@ export const updateEmailStatus = async (id, status, sentAt = null) => {
 };
 
 // get all emails
-export const getAllEmails = async () => {
+export const getAllEmails = async (filter = {}) => {
   return prisma.email.findMany({
+    where: filter,
     orderBy: { createdAt: "desc" },
   });
 };
