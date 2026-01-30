@@ -3,16 +3,20 @@ import { env } from "./env.js";
 
 export const redisConnection = new IORedis({
   host: env.redisHost,
-  port: env.redisPort,
+  port: Number(env.redisPort),
+  password: env.redisPassword,
+  tls: {},
   maxRetriesPerRequest: null,
 });
 
-// if connection is successfull
 redisConnection.on("connect", () => {
   console.log("Redis Connection Successful");
 });
 
-// if connection fails
+redisConnection.on("ready", () => {
+  console.log("Redis Authenticated and Ready");
+});
+
 redisConnection.on("error", (err) => {
   console.error("Redis Connection Failed", err);
 });
